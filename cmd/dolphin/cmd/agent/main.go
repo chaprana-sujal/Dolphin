@@ -14,6 +14,7 @@ import (
 var version = "0.1.0"
 
 func main() {
+	fmt.Println("--- DEBUG: AGENT STARTED ---")
 	var cfg agent.Config
 	var authorizedKeys []string
 
@@ -51,6 +52,7 @@ func main() {
 	rootCmd.Flags().StringSliceVarP(&authorizedKeys, "authorized", "a", nil, "Authorized public keys (hex)")
 
 	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "Fatal: %v\n", err)
 		os.Exit(1)
 	}
 }
