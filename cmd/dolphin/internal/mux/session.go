@@ -102,6 +102,11 @@ func (s *Session) NumStreams() int {
 	return s.inner.NumStreams()
 }
 
+// CloseChan returns a channel that is closed when the session is closed.
+func (s *Session) CloseChan() <-chan struct{} {
+	return s.inner.CloseChan()
+}
+
 // ErrSessionClosed is a helper to check if an error is due to session closure.
 func ErrIsClosed(err error) bool {
 	return errors.Is(err, yamux.ErrSessionShutdown) || errors.Is(err, io.EOF)

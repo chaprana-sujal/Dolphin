@@ -120,7 +120,7 @@ func Connect(ctx context.Context, cfg config.Config) error {
 
 	go func() {
 		// Wait for session to die
-		<-session.CloseCh()
+		<-session.CloseChan()
 		log.Printf("Session closed.")
 		proxyCancel()
 	}()

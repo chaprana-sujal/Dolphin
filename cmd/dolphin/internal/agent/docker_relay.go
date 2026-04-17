@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
 // DefaultDockerSocket returns the default path or pipe to the docker daemon.
