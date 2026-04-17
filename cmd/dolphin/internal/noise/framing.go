@@ -64,7 +64,10 @@ func (c *Conn) Write(p []byte) (int, error) {
 		if len(chunk) > maxPlaintext {
 			chunk = p[:maxPlaintext]
 		}
-		ciphertext := c.sendCS.Encrypt(nil, nil, chunk)
+		ciphertext, err := c.sendCS.Encrypt(nil, nil, chunk)
+		if err != nil {
+			return total, fmt.Errorf("dolphin/noise: encrypt: %w", err)
+		}
 		if err := writeFrame(c.inner, ciphertext); err != nil {
 			return total, fmt.Errorf("dolphin/noise: write frame: %w", err)
 		}
