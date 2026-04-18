@@ -7,7 +7,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
+	"github.com/moby/moby/api/types/container"
 	"github.com/gdamore/tcell/v2"
 	"github.com/guptarohit/asciigraph"
 	"github.com/rivo/tview"

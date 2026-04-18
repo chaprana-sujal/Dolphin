@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/docker/docker/api/types/container"
+	"github.com/moby/moby/api/types/container"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/moby/moby/v2/cmd/dolphin/internal/tui"
