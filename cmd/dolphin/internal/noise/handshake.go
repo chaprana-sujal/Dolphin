@@ -18,6 +18,7 @@ package noise
 import (
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"net"
@@ -285,14 +286,7 @@ func isAuthorized(pub []byte, authorized [][]byte) bool {
 		if len(a) != len(pub) {
 			continue
 		}
-		match := true
-		for i := range a {
-			if a[i] != pub[i] {
-				match = false
-				break
-			}
-		}
-		if match {
+		if subtle.ConstantTimeCompare(a, pub) == 1 {
 			return true
 		}
 	}

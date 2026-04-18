@@ -64,6 +64,8 @@ func (s *Server) Serve(ctx context.Context) error {
 		s.listener.Close()
 	}()
 
+	sem := make(chan struct{}, 64)
+
 	for {
 		conn, err := s.listener.Accept()
 		if err != nil {
@@ -73,7 +75,12 @@ func (s *Server) Serve(ctx context.Context) error {
 			log.Printf("accept error: %v", err)
 			continue
 		}
-		go s.handleConn(ctx, conn)
+		
+		sem <- struct{}{}
+		go func() {
+			defer func() { <-sem }()
+			s.handleConn(ctx, conn)
+		}()
 	}
 }
 

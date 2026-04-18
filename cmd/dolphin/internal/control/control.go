@@ -108,7 +108,8 @@ func NewServer(conn net.Conn, version string, numStreams func() int, dockerInfo 
 
 // Serve handles incoming requests on the control stream until it is closed.
 func (s *Server) Serve() error {
-	decoder := json.NewDecoder(s.conn)
+	limitedReader := io.LimitReader(s.conn, 4096)
+	decoder := json.NewDecoder(limitedReader)
 	encoder := json.NewEncoder(s.conn)
 
 	defer s.conn.Close()

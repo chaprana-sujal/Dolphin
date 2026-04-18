@@ -1,6 +1,7 @@
 package noise
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -77,10 +78,8 @@ func (kh *KnownHosts) Verify(hostname string, pubkey []byte) error {
 	if len(pinned) != len(pubkey) {
 		return ErrKeyMismatch
 	}
-	for i := range pinned {
-		if pinned[i] != pubkey[i] {
-			return fmt.Errorf("%w for %s", ErrKeyMismatch, hostname)
-		}
+	if subtle.ConstantTimeCompare(pinned, pubkey) != 1 {
+		return fmt.Errorf("%w for %s", ErrKeyMismatch, hostname)
 	}
 	return nil
 }
