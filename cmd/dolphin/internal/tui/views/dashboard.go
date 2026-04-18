@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/moby/moby/api/types"
 	"github.com/moby/moby/api/types/container"
+	dockerclient "github.com/moby/moby/client"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/moby/moby/v2/cmd/dolphin/internal/tui"
@@ -17,10 +17,10 @@ type Dashboard struct {
 	Layout     *tview.Flex
 	Table      *tview.Table
 	Sidebar    *tview.List
-	
+
 	containers []container.Summary
 	selected   map[string]bool
-	
+
 	OnSelect func(containerID string, name string)
 }
 
@@ -91,7 +91,7 @@ func (d *Dashboard) setupTableHeaders() {
 
 // Refresh hits the Yamux virtual Docker client and re-renders the table.
 func (d *Dashboard) Refresh() {
-	containers, err := d.App.Docker.ContainerList(d.App.Ctx, types.ContainerListOptions{All: true})
+	result, err := d.App.Docker.ContainerList(d.App.Ctx, dockerclient.ContainerListOptions{All: true})
 	if err != nil {
 		d.App.UI.QueueUpdateDraw(func() {
 			d.Table.SetTitle(fmt.Sprintf(" Error: %v ", err))
@@ -99,7 +99,7 @@ func (d *Dashboard) Refresh() {
 		return
 	}
 	d.App.UI.QueueUpdateDraw(func() {
-		d.containers = containers.Containers
+		d.containers = result.Items
 		d.refreshTableData()
 	})
 }
@@ -108,7 +108,7 @@ func (d *Dashboard) refreshTableData() {
 	d.setupTableHeaders()
 	for i, c := range d.containers {
 		row := i + 1
-		
+
 		chk := "[ ]"
 		if d.selected[c.ID] {
 			chk = "[x]"
@@ -121,9 +121,9 @@ func (d *Dashboard) refreshTableData() {
 		}
 
 		color := tcell.ColorWhite
-		if c.State == container.ContainerStateRunning {
+		if c.State == container.StateRunning {
 			color = tcell.ColorGreen
-		} else if c.State == container.ContainerStateExited {
+		} else if c.State == container.StateExited {
 			color = tcell.ColorGray
 		}
 
@@ -137,12 +137,11 @@ func (d *Dashboard) refreshTableData() {
 }
 
 func (d *Dashboard) deleteSelected() {
-	for id, selected := range d.selected {
-		if selected {
-			// Fire multiplexed delete
+	for id, sel := range d.selected {
+		if sel {
 			go func(containerID string) {
-				opts := types.ContainerRemoveOptions{Force: true}
-				_ = d.App.Docker.ContainerRemove(context.Background(), containerID, opts)
+				opts := dockerclient.ContainerRemoveOptions{Force: true}
+				_, _ = d.App.Docker.ContainerRemove(context.Background(), containerID, opts)
 				d.Refresh()
 			}(id)
 		}
