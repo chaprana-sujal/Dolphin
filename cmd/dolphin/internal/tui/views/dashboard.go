@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/moby/moby/api/types"
 	"github.com/moby/moby/api/types/container"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -90,7 +91,7 @@ func (d *Dashboard) setupTableHeaders() {
 
 // Refresh hits the Yamux virtual Docker client and re-renders the table.
 func (d *Dashboard) Refresh() {
-	containers, err := d.App.Docker.ContainerList(d.App.Ctx, container.ListOptions{All: true})
+	containers, err := d.App.Docker.ContainerList(d.App.Ctx, types.ContainerListOptions{All: true})
 	if err != nil {
 		d.App.UI.QueueUpdateDraw(func() {
 			d.Table.SetTitle(fmt.Sprintf(" Error: %v ", err))
@@ -98,7 +99,7 @@ func (d *Dashboard) Refresh() {
 		return
 	}
 	d.App.UI.QueueUpdateDraw(func() {
-		d.containers = containers
+		d.containers = containers.Containers
 		d.refreshTableData()
 	})
 }
@@ -120,9 +121,9 @@ func (d *Dashboard) refreshTableData() {
 		}
 
 		color := tcell.ColorWhite
-		if c.State == "running" {
+		if c.State == container.ContainerStateRunning {
 			color = tcell.ColorGreen
-		} else if c.State == "exited" {
+		} else if c.State == container.ContainerStateExited {
 			color = tcell.ColorGray
 		}
 
@@ -130,7 +131,7 @@ func (d *Dashboard) refreshTableData() {
 		d.Table.SetCell(row, 1, tview.NewTableCell(name).SetTextColor(color))
 		d.Table.SetCell(row, 2, tview.NewTableCell(shortID).SetTextColor(tcell.ColorWhite))
 		d.Table.SetCell(row, 3, tview.NewTableCell(c.Image).SetTextColor(tcell.ColorWhite))
-		d.Table.SetCell(row, 4, tview.NewTableCell(c.State).SetTextColor(color))
+		d.Table.SetCell(row, 4, tview.NewTableCell(string(c.State)).SetTextColor(color))
 		d.Table.SetCell(row, 5, tview.NewTableCell(c.Status).SetTextColor(color))
 	}
 }
@@ -140,9 +141,8 @@ func (d *Dashboard) deleteSelected() {
 		if selected {
 			// Fire multiplexed delete
 			go func(containerID string) {
-				opts := container.RemoveOptions{Force: true}
+				opts := types.ContainerRemoveOptions{Force: true}
 				_ = d.App.Docker.ContainerRemove(context.Background(), containerID, opts)
-				// Re-fetch after delete
 				d.Refresh()
 			}(id)
 		}

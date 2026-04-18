@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"time"
 
+	"github.com/moby/moby/api/types"
 	"github.com/moby/moby/api/types/container"
+	dockerclient "github.com/moby/moby/client"
 	"github.com/gdamore/tcell/v2"
 	"github.com/guptarohit/asciigraph"
 	"github.com/rivo/tview"
@@ -101,7 +102,7 @@ func (d *Details) Close() {
 }
 
 func (d *Details) streamLogs(ctx context.Context) {
-	opts := container.LogsOptions{ShowStdout: true, ShowStderr: true, Follow: true, Tail: "50"}
+	opts := types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: true, Tail: "50"}
 	reader, err := d.App.Docker.ContainerLogs(ctx, d.containerID, opts)
 	if err != nil {
 		d.App.UI.QueueUpdateDraw(func() { d.LogsView.SetText(err.Error()) })
@@ -132,7 +133,7 @@ func (d *Details) streamLogs(ctx context.Context) {
 }
 
 func (d *Details) streamStats(ctx context.Context) {
-	resp, err := d.App.Docker.ContainerStats(ctx, d.containerID, true)
+	resp, err := d.App.Docker.ContainerStats(ctx, d.containerID, dockerclient.ContainerStatsOptions{Stream: true})
 	if err != nil {
 		return
 	}
